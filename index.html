@@ -1,0 +1,1431 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Graph Editor</title>
+    <style>
+      #canvas {
+        border: 1px solid black;
+        width: 1000px;
+        height: 600px;
+        color: #212529;
+      }
+      circle.vertex {
+        cursor: pointer;
+        position: relative;
+        z-index: 2;
+      }
+
+      line.edge {
+        position: relative;
+        z-index: 1;
+      }
+
+      circle.selected {
+        stroke: red;
+        stroke-width: 4px;
+      }
+
+      circle.dual-vertex {
+        cursor: pointer;
+        z-index: 2;
+      }
+
+      line.dual-edge {
+        z-index: 1;
+      }
+
+      button {
+        margin-top: 10px;
+      }
+
+      #dropdown {
+        padding: 10px;
+        font-size: 16px;
+        width: auto;
+        max-width: 200px;
+      }
+    </style>
+  </head>
+  <body>
+    <script src="polylabel.js"></script>
+    <div style="display: flex; flex-direction: row; margin-bottom: 30px">
+      <button
+        id="addVertexButton"
+        style="margin-right: 40px"
+        onclick="toggleVertexAdding()"
+      >
+        Add Vertex
+      </button>
+      <button
+        id="addEdgeButton"
+        style="margin-right: 40px"
+        onclick="toggleEdgeAdding()"
+      >
+        Add Edge
+      </button>
+      <button
+        id="quickAddEdgeButton"
+        style="margin-right: 40px"
+        onclick="toggleQuickAddEdge()"
+      >
+        Quick Add Edge
+      </button>
+      <button
+        id="drawDualGraphWithCurvesButton"
+        style="margin-right: 40px"
+        onclick="drawDualGraph(svg, 'curveNatural')"
+      >
+        Draw Dual Graph with Curves
+      </button>
+      <button
+        id="drawDualGraphWithSegmentsButton"
+        onclick="drawDualGraph(svg, 'curveLinear')"
+      >
+        Draw Dual Graph with Segments
+      </button>
+    </div>
+    <svg id="canvas"></svg>
+
+    <div style="display: flex; flex-direction: column; margin-top: 10px">
+      <div id="InputVertexSettingOptions" style="display: flex">
+        <div style="padding-right: 40px">
+          <div>Input Vertex Radius:&nbsp;&nbsp;</div>
+          <select id="InputVertexRadiusDropdown">
+            <option value="0px">0px</option>
+            <option value="1px">1px</option>
+            <option value="2px">2px</option>
+            <option value="3px">3px</option>
+            <option value="4px">4px</option>
+            <option value="5px">5px</option>
+            <option value="6px">6px</option>
+            <option value="7px">7px</option>
+            <option value="8px">8px</option>
+            <option value="9px">9px</option>
+            <option value="10px" selected>10px</option>
+            <option value="11px">11px</option>
+            <option value="12px">12px</option>
+            <option value="13px">13px</option>
+            <option value="14px">14px</option>
+            <option value="15px">15px</option>
+            <option value="16px">16px</option>
+            <option value="17px">17px</option>
+            <option value="18px">18px</option>
+            <option value="19px">19px</option>
+            <option value="20px">20px</option>
+          </select>
+        </div>
+        <div style="padding-right: 40px">
+          <div>Input Vertex Fill Color:&nbsp;&nbsp;</div>
+          <input
+            class="ColorPicker"
+            id="inputVertexFillColor-Picker"
+            value="#2986cc"
+          />
+        </div>
+        <div style="padding-right: 40px">
+          <div>Input Vertex Border Width:&nbsp;&nbsp;</div>
+          <select id="InputVertexBorderWidthDropdown">
+            <option value="0px">0px</option>
+            <option value="1px">1px</option>
+            <option value="2px" selected>2px</option>
+            <option value="3px">3px</option>
+            <option value="4px">4px</option>
+          </select>
+        </div>
+        <div style="padding-right: 40px">
+          <div>Input Vertex Border Color:&nbsp;&nbsp;</div>
+          <input
+            class="ColorPicker"
+            id="inputVertexStrokeColor-Picker"
+            value="#2986cc"
+          />
+        </div>
+      </div>
+      <div id="InputEdgeSettingOptions" style="display: flex">
+        <div style="padding-right: 40px">
+          <div>Input Edge Width:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+          <select id="InputEdgeWidthDropdown">
+            <option value="0px">0px</option>
+            <option value="1px">1px</option>
+            <option value="2px" selected>2px</option>
+            <option value="3px">3px</option>
+            <option value="4px">4px</option>
+            <option value="5px">5px</option>
+          </select>
+        </div>
+        <div style="padding-right: 40px">
+          <div>Input Edge Color:&nbsp;&nbsp;</div>
+          <input
+            class="ColorPicker"
+            id="inputEdgeColor-Picker"
+            value="#2dadee"
+          />
+        </div>
+      </div>
+      <div id="DualVertexSettingOptions" style="display: flex">
+        <div style="padding-right: 40px">
+          <div>Dual Vertex Radius:&nbsp;&nbsp;&nbsp;</div>
+          <select id="DualVertexRadiusDropdown">
+            <option value="0px">0px</option>
+            <option value="1px">1px</option>
+            <option value="2px">2px</option>
+            <option value="3px">3px</option>
+            <option value="4px">4px</option>
+            <option value="5px">5px</option>
+            <option value="6px">6px</option>
+            <option value="7px">7px</option>
+            <option value="8px">8px</option>
+            <option value="9px">9px</option>
+            <option value="10px" selected>10px</option>
+            <option value="11px">11px</option>
+            <option value="12px">12px</option>
+            <option value="13px">13px</option>
+            <option value="14px">14px</option>
+            <option value="15px">15px</option>
+            <option value="16px">16px</option>
+            <option value="17px">17px</option>
+            <option value="18px">18px</option>
+            <option value="19px">19px</option>
+            <option value="20px">20px</option>
+          </select>
+        </div>
+        <div style="padding-right: 40px">
+          <div>Dual Vertex Fill Color:&nbsp;&nbsp;</div>
+          <input
+            class="ColorPicker"
+            id="DualVertexFillColor-Picker"
+            value="#c01717"
+          />
+        </div>
+        <div style="padding-right: 44px">
+          <div>Dual Vertex Border Width:&nbsp;&nbsp;</div>
+          <select id="DualVertexStrokeWidthDropdown">
+            <option value="0px">0px</option>
+            <option value="1px">1px</option>
+            <option value="2px" selected>2px</option>
+            <option value="3px">3px</option>
+            <option value="4px">4px</option>
+          </select>
+        </div>
+        <div style="padding-right: 40px">
+          <div>Dual Vertex Border Color:&nbsp;&nbsp;</div>
+          <input
+            class="ColorPicker"
+            id="DualVertexBorderColor-Picker"
+            value="#e06666"
+          />
+        </div>
+      </div>
+      <div id="DualEdgeSettingOptions" style="display: flex">
+        <div style="padding-right: 40px">
+          <div>Dual Edge Width:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+          <select id="DualEdgeWidthDropdown">
+            <option value="0px">0px</option>
+            <option value="1px">1px</option>
+            <option value="2px" selected>2px</option>
+            <option value="3px">3px</option>
+            <option value="4px">4px</option>
+            <option value="5px">5px</option>
+          </select>
+        </div>
+        <div style="padding-right: 40px">
+          <div>Dual Edge Color:&nbsp;&nbsp;</div>
+          <input
+            class="ColorPicker"
+            id="DualEdgeColor-Picker"
+            value="#ec746b"
+          />
+        </div>
+      </div>
+    </div>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <script src="spectrum.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="spectrum.min.css" />
+    <script>
+      let inputVertexRadius = "10px";
+      let inputVertexFillColor = "#2986cc";
+      let inputVertexStrokeWidth = "2px";
+      let inputVertexStrokeColor = "#2986cc";
+      let inputEdgeStrokeWidth = "2px";
+      let inputEdgeStrokeColor = "#2dadee";
+      let dualVertexRadius = "10px";
+      let dualVertexFillColor = "#c01717";
+      let dualVertexStrokeWidth = "2px";
+      let dualVertexStrokeColor = "#e06666";
+      let dualEdgeStrokeWidth = "2px";
+      let dualEdgeStrokeColor = "#ec746b";
+
+      const inputVertexRadiusDropdown = document.getElementById(
+        "InputVertexRadiusDropdown"
+      );
+      inputVertexRadiusDropdown.addEventListener("change", () => {
+        const parsedInteger = parseInt(inputVertexRadiusDropdown.value, 10);
+        inputVertexRadius = parsedInteger;
+        updateVertexRadius(svg, inputVertexRadius);
+      });
+
+      const inputVertexStrokeWidthDropdown = document.getElementById(
+        "InputVertexBorderWidthDropdown"
+      );
+      inputVertexStrokeWidthDropdown.addEventListener("change", () => {
+        inputVertexStrokeWidth = inputVertexStrokeWidthDropdown.value;
+        updateVertexStrokeWidth(svg, inputVertexStrokeWidth);
+      });
+
+      const inputEdgeStrokeWidthDropdown = document.getElementById(
+        "InputEdgeWidthDropdown"
+      );
+      inputEdgeStrokeWidthDropdown.addEventListener("change", () => {
+        inputEdgeStrokeWidth = inputEdgeStrokeWidthDropdown.value;
+        updateEdgeStrokeWidth(svg, inputEdgeStrokeWidth);
+      });
+
+      const dualEdgeStrokeWidthDropdown = document.getElementById(
+        "DualEdgeWidthDropdown"
+      );
+      dualEdgeStrokeWidthDropdown.addEventListener("change", () => {
+        dualEdgeStrokeWidth = dualEdgeStrokeWidthDropdown.value;
+        updateDualEdgeStrokeWidth(svg, dualEdgeStrokeWidth);
+      });
+
+      const dualVertexRadiusDropdown = document.getElementById(
+        "DualVertexRadiusDropdown"
+      );
+      dualVertexRadiusDropdown.addEventListener("change", () => {
+        dualVertexRadius = dualVertexRadiusDropdown.value;
+        updateDualVertexRadius(svg, dualVertexRadius);
+      });
+
+      const dualVertexStrokeWidthDropdown = document.getElementById(
+        "DualVertexStrokeWidthDropdown"
+      );
+      dualVertexStrokeWidthDropdown.addEventListener("change", () => {
+        dualVertexStrokeWidth = dualVertexStrokeWidthDropdown.value;
+        updateDualVertexStrokeWidth(svg, dualVertexStrokeWidth);
+      });
+
+      const colorPickerElements = document.querySelectorAll(".ColorPicker");
+      Spectrum.createMultiple(colorPickerElements, {
+        togglePaletteOnly: true,
+        showInput: true,
+        showInitial: true,
+        showAlpha: false,
+      });
+      colorPickerElements[0].addEventListener("change", function (event) {
+        inputVertexFillColor = event.target.value;
+        updateVertexFillColor(svg, inputVertexFillColor);
+      });
+      colorPickerElements[1].addEventListener("change", function (event) {
+        inputVertexStrokeColor = event.target.value;
+        updateVertexStrokeColor(svg, inputVertexStrokeColor);
+      });
+      colorPickerElements[2].addEventListener("change", function (event) {
+        inputEdgeStrokeColor = event.target.value;
+        updateEdgeStrokeColor(svg, inputEdgeStrokeColor);
+      });
+      colorPickerElements[3].addEventListener("change", function (event) {
+        dualVertexFillColor = event.target.value;
+        updateDualVertexFillColor(svg, dualVertexFillColor);
+      });
+      colorPickerElements[4].addEventListener("change", function (event) {
+        dualVertexStrokeColor = event.target.value;
+        updateDualVertexStrokeColor(svg, dualVertexStrokeColor);
+      });
+      colorPickerElements[5].addEventListener("change", function (event) {
+        dualEdgeStrokeColor = event.target.value;
+        updateDualEdgeStrokeColor(svg, dualEdgeStrokeColor);
+      });
+      let svg = document.getElementById("canvas");
+
+      let curveType = "curveNatural";
+
+      let isVertexAdding = false;
+      let isEdgeAdding = false;
+      let isQuickAddEdge = false;
+
+      let selectedVertices = [];
+
+      let vertexIndexSet = new Set();
+      let vertexIndexCounter = 0;
+      let vertexCoordinates = {};
+      let neighborsOfVertex = {};
+
+      let edgeIndexStringSet = new Set();
+      let edgeIndexArray = [];
+
+      let calculatedEmbedding = {};
+
+      let calculatedFaces = [];
+      let calculatedOuterFace = [];
+      let calculatedOuterFaceIndex = 0;
+
+      let twoFacesOfAllEdges = {};
+      let pointOfAllFaceIndices = {};
+
+      const canvas = d3.select("#canvas");
+      const width = parseFloat(canvas.style("width"));
+      const height = parseFloat(canvas.style("height"));
+
+      canvas.on("click", function () {
+        if (isVertexAdding) {
+          const pos = d3.pointer(event);
+          const vertex = canvas
+            .append("circle")
+            .attr("class", "vertex")
+            .attr("r", inputVertexRadius)
+            .attr("cx", pos[0])
+            .attr("cy", pos[1])
+            .attr("vertexIndex", vertexIndexCounter)
+            .attr("fill", inputVertexFillColor)
+            .attr("stroke", inputVertexStrokeColor)
+            .attr("stroke-width", inputVertexStrokeWidth)
+            .attr("position", "relative")
+            .on("click", function () {
+              if (!isEdgeAdding && !isQuickAddEdge) {
+                return;
+              }
+              if (isQuickAddEdge) {
+                if (selectedVertices.length === 0) {
+                  d3.select(this).classed("selected", true);
+                  selectedVertices.push(this);
+                } else if (this === selectedVertices[0]) {
+                  d3.select(this).classed("selected", false);
+                  selectedVertices = [];
+                } else {
+                  selectedVertices.push(this);
+                  const vertex1 = selectedVertices[0];
+                  const vertex1Index = parseInt(
+                    vertex1.getAttribute("vertexIndex")
+                  );
+                  const vertex2 = this;
+                  const vertex2Index = parseInt(
+                    vertex2.getAttribute("vertexIndex")
+                  );
+                  const newEdge = [vertex1Index, vertex2Index];
+                  const newEdge1Str = vertex1Index + " " + vertex2Index;
+                  const newEdge2Str = vertex2Index + " " + vertex1Index;
+                  if (
+                    edgeIndexStringSet.has(newEdge1Str) ||
+                    edgeIndexStringSet.has(newEdge2Str)
+                  ) {
+                    d3.select(selectedVertices[0]).classed("selected", false);
+                    d3.select(selectedVertices[1]).classed("selected", true);
+                    selectedVertices.shift();
+                  } else {
+                    edgeIndexStringSet.add(newEdge1Str);
+                    edgeIndexStringSet.add(newEdge2Str);
+                    edgeIndexArray = [...edgeIndexArray, newEdge];
+                    neighborsOfVertex[vertex1Index].add(vertex2Index);
+                    neighborsOfVertex[vertex2Index].add(vertex1Index);
+
+                    const edge = canvas
+                      .insert("line", ":first-child")
+                      .attr("class", "edge")
+                      .attr("x1", selectedVertices[0].getAttribute("cx"))
+                      .attr("y1", selectedVertices[0].getAttribute("cy"))
+                      .attr("x2", selectedVertices[1].getAttribute("cx"))
+                      .attr("y2", selectedVertices[1].getAttribute("cy"))
+                      .attr("stroke", inputEdgeStrokeColor)
+                      .attr("stroke-width", inputEdgeStrokeWidth);
+                    d3.select(selectedVertices[0]).classed("selected", false);
+                    d3.select(selectedVertices[1]).classed("selected", true);
+                    selectedVertices.shift();
+                  }
+                }
+              }
+              if (isEdgeAdding) {
+                d3.select(this).classed("selected", true);
+                selectedVertices.push(this);
+                if (selectedVertices.length === 2) {
+                  const vertex1 = selectedVertices[0];
+                  const vertex1Index = parseInt(
+                    vertex1.getAttribute("vertexIndex")
+                  );
+                  const vertex2 = selectedVertices[1];
+                  const vertex2Index = parseInt(
+                    vertex2.getAttribute("vertexIndex")
+                  );
+                  const newEdge = [vertex1Index, vertex2Index];
+                  const newEdge1Str = vertex1Index + " " + vertex2Index;
+                  const newEdge2Str = vertex2Index + " " + vertex1Index;
+                  if (
+                    edgeIndexStringSet.has(newEdge1Str) ||
+                    edgeIndexStringSet.has(newEdge2Str)
+                  ) {
+                    selectedVertices.pop();
+                    d3.select(this).classed("selected", false);
+                  } else if (vertex1 === vertex2) {
+                    selectedVertices.forEach(function (vertex) {
+                      d3.select(vertex).classed("selected", false);
+                    });
+                    selectedVertices = [];
+                  } else {
+                    edgeIndexStringSet.add(newEdge1Str);
+                    edgeIndexStringSet.add(newEdge2Str);
+                    edgeIndexArray = [...edgeIndexArray, newEdge];
+                    neighborsOfVertex[vertex1Index].add(vertex2Index);
+                    neighborsOfVertex[vertex2Index].add(vertex1Index);
+
+                    const edge = canvas
+                      .insert("line", ":first-child")
+                      .attr("class", "edge")
+                      .attr("stroke", inputEdgeStrokeColor)
+                      .attr("stroke-width", inputEdgeStrokeWidth)
+                      .attr("x1", selectedVertices[0].getAttribute("cx"))
+                      .attr("y1", selectedVertices[0].getAttribute("cy"))
+                      .attr("x2", selectedVertices[1].getAttribute("cx"))
+                      .attr("y2", selectedVertices[1].getAttribute("cy"));
+                    selectedVertices.forEach(function (vertex) {
+                      d3.select(vertex).classed("selected", false);
+                    });
+                    selectedVertices = [];
+                  }
+                }
+              }
+            });
+          vertexIndexSet.add(vertexIndexCounter);
+          vertexCoordinates[vertexIndexCounter] = [pos[0], pos[1]];
+          neighborsOfVertex[vertexIndexCounter] = new Set();
+          vertexIndexCounter++;
+        }
+      });
+
+      function clearPaths(svg) {
+        let paths = svg.querySelectorAll("path");
+
+        for (let i = paths.length - 1; i >= 0; i--) {
+          paths[i].parentNode.removeChild(paths[i]);
+        }
+      }
+
+      function drawDualGraph(svg, targetCurveType) {
+        clearPaths(svg);
+        if (targetCurveType === "curveNatural") {
+          curveType = "curveNatural";
+        } else if (targetCurveType === "curveLinear") {
+          curveType = "curveLinear";
+        }
+
+        selectedVertices.forEach(function (vertex) {
+          d3.select(vertex).classed("selected", false);
+        });
+        calculateEmbedding(neighborsOfVertex, vertexCoordinates);
+        calculateFaces(edgeIndexArray, calculatedEmbedding, vertexCoordinates);
+        calculateVisualCenterOfPolygons(
+          calculatedFaces,
+          vertexCoordinates,
+          calculatedOuterFaceIndex
+        );
+        drawDualEdgesWithCurves(
+          vertexCoordinates,
+          edgeIndexArray,
+          calculatedFaces,
+          pointOfAllFaceIndices
+        );
+      }
+
+      function calculateEmbedding(neighborsOfVertex, vertexCoordinates) {
+        const embedding = {};
+
+        for (const vertexIndex in neighborsOfVertex) {
+          const neighbors = neighborsOfVertex[vertexIndex];
+          const neighborCoordinates = [];
+          for (const neighborIndex of neighbors) {
+            const xDiff =
+              vertexCoordinates[neighborIndex][0] -
+              vertexCoordinates[vertexIndex][0];
+            const yDiff =
+              vertexCoordinates[neighborIndex][1] -
+              vertexCoordinates[vertexIndex][1];
+            const angle = Math.atan2(yDiff, xDiff);
+
+            neighborCoordinates.push({
+              index: neighborIndex,
+              angle: angle,
+            });
+          }
+          neighborCoordinates.sort((a, b) => a.angle - b.angle);
+          const sortedNeighbors = neighborCoordinates.map(
+            (neighbor) => neighbor.index
+          );
+
+          embedding[vertexIndex] = sortedNeighbors;
+        }
+
+        calculatedEmbedding = embedding;
+        return embedding;
+      }
+
+      function toggleVertexAdding() {
+        isVertexAdding = !isVertexAdding;
+        if (isVertexAdding) {
+          d3.select("#addVertexButton").text("Stop Adding Vertices");
+          d3.select("#addEdgeButton").attr("disabled", true);
+          d3.select("#quickAddEdgeButton").attr("disabled", true);
+          d3.select("#calculateDualGraphButton").attr("disabled", true);
+        } else {
+          d3.select("#addVertexButton").text("Add Vertex");
+          d3.select("#addEdgeButton").attr("disabled", null);
+          d3.select("#quickAddEdgeButton").attr("disabled", null);
+          d3.select("#calculateDualGraphButton").attr("disabled", null);
+        }
+      }
+
+      function toggleEdgeAdding() {
+        isEdgeAdding = !isEdgeAdding;
+        if (isEdgeAdding) {
+          d3.select("#addEdgeButton").text("Stop Adding Edges");
+          d3.select("#addVertexButton").attr("disabled", true);
+          d3.select("#quickAddEdgeButton").attr("disabled", true);
+          d3.select("#calculateDualGraphButton").attr("disabled", true);
+        } else {
+          d3.select("#addEdgeButton").text("Add Edge");
+          d3.select("#addVertexButton").attr("disabled", null);
+          d3.select("#quickAddEdgeButton").attr("disabled", null);
+          d3.select("#calculateDualGraphButton").attr("disabled", null);
+        }
+      }
+
+      function toggleQuickAddEdge() {
+        isQuickAddEdge = !isQuickAddEdge;
+        if (isQuickAddEdge) {
+          d3.select("#quickAddEdgeButton").text("Stop Quick Add Edge");
+          d3.select("#addVertexButton").attr("disabled", true);
+          d3.select("#addEdgeButton").attr("disabled", true);
+          d3.select("#calculateDualGraphButton").attr("disabled", true);
+        } else {
+          d3.select("#quickAddEdgeButton").text("Quick Add Edge");
+          d3.select("#addVertexButton").attr("disabled", null);
+          d3.select("#addEdgeButton").attr("disabled", null);
+          d3.select("#calculateDualGraphButton").attr("disabled", null);
+        }
+      }
+
+      function calculateFaces(edges, embedding, vertexCoordinates) {
+        let edgeset = new Set();
+        for (let i = 0; i < edges.length; i++) {
+          let edge = edges[i];
+          edgeset.add(JSON.stringify([edge[0], edge[1]]));
+          edgeset.add(JSON.stringify([edge[1], edge[0]]));
+        }
+
+        let faces = [];
+        let path = [];
+
+        let firstEdge = JSON.parse(edgeset.values().next().value);
+        path.push(firstEdge);
+        edgeset.delete(JSON.stringify(firstEdge));
+
+        while (edgeset.size > 0) {
+          let neighbors = embedding[path[path.length - 1][1]];
+          let nextNode =
+            neighbors[
+              (neighbors.indexOf(path[path.length - 1][0]) + 1) %
+                neighbors.length
+            ];
+          let tup = [path[path.length - 1][1], nextNode];
+          if (JSON.stringify(tup) === JSON.stringify(path[0])) {
+            faces.push(path);
+            path = [];
+            let edge = JSON.parse(edgeset.values().next().value);
+            path.push(edge);
+            edgeset.delete(JSON.stringify(edge));
+          } else {
+            path.push(tup);
+            edgeset.delete(JSON.stringify(tup));
+          }
+        }
+        if (path.length !== 0) faces.push(path);
+        const outerFace = findOuterFace(faces, embedding, vertexCoordinates);
+        for (let i = 0; i < faces.length; i++) {
+          const currentFace = faces[i];
+          let isOuterFace = true;
+          if (currentFace.length === outerFace.length) {
+            for (let j = 0; j < currentFace.length; j++) {
+              if (currentFace[j] !== outerFace[j]) {
+                isOuterFace = false;
+                break;
+              }
+            }
+            if (isOuterFace) {
+              calculatedOuterFaceIndex = i;
+            }
+          }
+        }
+        calculatedFaces = faces;
+        calculatedOuterFace = outerFace;
+
+        for (let i = 0; i < faces.length; i++) {
+          const face = faces[i];
+          for (const edge of face) {
+            const formattedEdge =
+              letFirstVertexIndexSmallerThanSecondVertexIndex(edge);
+            if (formattedEdge in twoFacesOfAllEdges) {
+              twoFacesOfAllEdges[formattedEdge].push(i);
+            } else {
+              twoFacesOfAllEdges[formattedEdge] = [i];
+            }
+          }
+        }
+        return faces;
+      }
+
+      function letFirstVertexIndexSmallerThanSecondVertexIndex(edge) {
+        let [v1, v2] = edge;
+        if (v1 > v2) {
+          return [v2, v1];
+        }
+        return edge;
+      }
+
+      function findOuterFace(faces, embedding, vertexCoordinates) {
+        let outerFace = null;
+        for (let i = 0; i < faces.length; i++) {
+          let face = faces[i];
+          let isClockwise = true;
+          let sum = 0;
+          for (let j = 0; j < face.length; j++) {
+            let edge = face[j];
+            let v1 = edge[0];
+            let x1 = vertexCoordinates[v1][0];
+            let y1 = vertexCoordinates[v1][1];
+            let v2 = edge[1];
+            let x2 = vertexCoordinates[v2][0];
+            let y2 = vertexCoordinates[v2][1];
+            sum += (x2 - x1) * (y2 + y1);
+          }
+          if (sum > 0) {
+            isClockwise = false;
+          }
+          if (isClockwise) {
+            outerFace = face;
+            break;
+          }
+        }
+        return outerFace;
+      }
+
+      function computeArea(face, coordinates) {
+        let area = 0;
+        let edgeCount = face.length;
+        for (let j = 0; j < edgeCount; j++) {
+          let v1 = face[j][0];
+          let v2 = face[j][1];
+          let x1 = coordinates[v1][0];
+          let y1 = coordinates[v1][1];
+          let x2 = coordinates[v2][0];
+          let y2 = coordinates[v2][1];
+          area += x1 * y2 - x2 * y1;
+        }
+        return area / 2;
+      }
+
+      function calculateVisualCenterOfPolygons(
+        faces,
+        coordinates,
+        calculatedOuterFaceIndex
+      ) {
+        let visualCenters = [];
+        for (let i = 0; i < faces.length; i++) {
+          let visualCenterOfFace = [200, 10];
+          if (i !== calculatedOuterFaceIndex) {
+            let verticesInClockwiseOrder = [];
+            let face = faces[i];
+            for (const edge of face) {
+              const edgeFirstVertexCoordinate = coordinates[edge[0]];
+              verticesInClockwiseOrder = [
+                ...verticesInClockwiseOrder,
+                edgeFirstVertexCoordinate,
+              ];
+            }
+            visualCenterOfFace = polylabel([verticesInClockwiseOrder]);
+          }
+          visualCenters = [...visualCenters, visualCenterOfFace];
+          pointOfAllFaceIndices[i] = visualCenterOfFace;
+          const vertex = canvas
+            .append("circle")
+            .attr("class", "dual-vertex")
+            .attr("r", dualVertexRadius)
+            .attr("fill", dualVertexFillColor)
+            .attr("stroke-width", dualVertexStrokeWidth)
+            .attr("stroke", dualVertexStrokeColor)
+            .attr("cx", visualCenterOfFace[0])
+            .attr("cy", visualCenterOfFace[1])
+            .attr("dualPointIndex", i)
+            .attr("fill", "red")
+            .attr("position", "relative");
+        }
+        return visualCenters;
+      }
+
+      function calculateEdgeMidPoint(edge, vertexCoordinates) {
+        let v1 = edge[0];
+        let x1 = vertexCoordinates[v1][0];
+        let y1 = vertexCoordinates[v1][1];
+        let v2 = edge[1];
+        let x2 = vertexCoordinates[v2][0];
+        let y2 = vertexCoordinates[v2][1];
+        const edgeMidPoint = [(x1 + x2) / 2, (y1 + y2) / 2];
+        return edgeMidPoint;
+      }
+
+      function flipEdgeIndex(edge) {
+        let [v1, v2] = edge;
+        return [v2, v1];
+      }
+
+      function findControlPoint(a, b, c, distance) {
+        if (a[0] === c[0] && a[1] === c[1]) {
+          const AB = [b[0] - a[0], b[1] - a[1]];
+          const BC = [c[0] - b[0], c[1] - b[1]];
+
+          const lineLength = Math.sqrt(AB[0] * AB[0] + AB[1] * AB[1]);
+          const factor = lineLength / Math.abs(distance);
+          const lineDisplacement = [
+            (b[0] - a[0]) / factor,
+            (b[1] - a[1]) / factor,
+          ];
+          const resultPoint = [
+            b[0] + lineDisplacement[0],
+            b[1] + lineDisplacement[1],
+          ];
+          return resultPoint;
+        }
+
+        const AB = [b[0] - a[0], b[1] - a[1]];
+        const BC = [c[0] - b[0], c[1] - b[1]];
+
+        const magnitudeAB = Math.sqrt(AB[0] * AB[0] + AB[1] * AB[1]);
+        const magnitudeBC = Math.sqrt(BC[0] * BC[0] + BC[1] * BC[1]);
+
+        const unitAB = [AB[0] / magnitudeAB, AB[1] / magnitudeAB];
+        const unitBC = [BC[0] / magnitudeBC, BC[1] / magnitudeBC];
+
+        const crossProduct = AB[0] * BC[1] - AB[1] * BC[0];
+
+        const unitBisector = [unitAB[0] + unitBC[0], unitAB[1] + unitBC[1]];
+
+        const magnitudeBisector = Math.sqrt(
+          unitBisector[0] * unitBisector[0] + unitBisector[1] * unitBisector[1]
+        );
+
+        unitBisector[0] /= magnitudeBisector;
+        unitBisector[1] /= magnitudeBisector;
+
+        let P = [
+          b[0] + distance * unitBisector[1],
+          b[1] - distance * unitBisector[0],
+        ];
+
+        const ABtoP = [P[0] - a[0], P[1] - a[1]];
+        const BCtoP = [P[0] - c[0], P[1] - c[1]];
+
+        const crossProduct1 = AB[0] * ABtoP[1] - AB[1] * ABtoP[0];
+        const crossProduct2 = BC[0] * BCtoP[1] - BC[1] * BCtoP[0];
+
+        if (crossProduct1 >= 0 || crossProduct2 <= 0) {
+          P = [
+            b[0] - distance * unitBisector[1],
+            b[1] + distance * unitBisector[0],
+          ];
+        }
+
+        return P;
+      }
+
+      function drawDualEdgesWithCurves(
+        vertexCoordinates,
+        edgeIndexArray,
+        calculatedFaces,
+        pointOfAllFaceIndices
+      ) {
+        for (let i = 0; i < edgeIndexArray.length; i++) {
+          drawADualEdge(
+            i,
+            vertexCoordinates,
+            edgeIndexArray,
+            calculatedFaces,
+            pointOfAllFaceIndices
+          );
+        }
+      }
+
+      function drawADualEdge(
+        dualEdgeIndex,
+        vertexCoordinates,
+        edgeIndexArray,
+        calculatedFaces,
+        pointOfAllFaceIndices
+      ) {
+        const edgeIndex = dualEdgeIndex;
+        const edge = edgeIndexArray[edgeIndex];
+        const edgeFlipped = flipEdgeIndex(edge);
+        let face1 = -1;
+        let face2 = -1;
+        let foundEdgesTwoFaces = false;
+        for (let i = 0; i < calculatedFaces.length; i++) {
+          if (foundEdgesTwoFaces) {
+            break;
+          }
+          for (let j = 0; j < calculatedFaces[i].length; j++) {
+            if (
+              (calculatedFaces[i][j][0] === edge[0] &&
+                calculatedFaces[i][j][1] === edge[1]) ||
+              (calculatedFaces[i][j][0] === edgeFlipped[0] &&
+                calculatedFaces[i][j][1] === edgeFlipped[1])
+            ) {
+              if (face1 === -1) {
+                face1 = i;
+              } else {
+                face2 = i;
+                foundEdgesTwoFaces = true;
+                break;
+              }
+            }
+          }
+        }
+
+        let edgeSegments = [];
+        for (let i = 0; i < edgeIndexArray.length; i++) {
+          const [v1Index, v2Index] = edgeIndexArray[i];
+          const edgeSegment = [
+            vertexCoordinates[v1Index],
+            vertexCoordinates[v2Index],
+          ];
+          edgeSegments = [...edgeSegments, edgeSegment];
+        }
+
+        let face1ControlPoints = [];
+        face1ControlPoints = calculateControlPointFromPointToEdge(
+          pointOfAllFaceIndices[face1],
+          dualEdgeIndex,
+          calculatedFaces[face1],
+          edgeSegments,
+          vertexCoordinates,
+          edgeIndexArray,
+          true
+        );
+
+        face2ControlPoints = calculateControlPointFromPointToEdge(
+          pointOfAllFaceIndices[face2],
+          dualEdgeIndex,
+          calculatedFaces[face2],
+          edgeSegments,
+          vertexCoordinates,
+          edgeIndexArray,
+          true
+        );
+
+        const face1DualPoint = pointOfAllFaceIndices[face1];
+        const face2DualPoint = pointOfAllFaceIndices[face2];
+        const edgeMidPoint = calculateEdgeMidPoint(
+          edgeIndexArray[dualEdgeIndex],
+          vertexCoordinates
+        );
+        let pointsForCurvePath = [face1DualPoint];
+        for (let i = 0; i < face1ControlPoints.length; i++) {
+          pointsForCurvePath.push(face1ControlPoints[i]);
+        }
+        pointsForCurvePath.push(edgeMidPoint);
+        for (let i = face2ControlPoints.length - 1; i >= 0; i--) {
+          pointsForCurvePath.push(face2ControlPoints[i]);
+        }
+
+        pointsForCurvePath.push(face2DualPoint);
+
+        let curve = d3.line().curve(d3.curveNatural);
+        if (curveType === "curveLinear") {
+          curve = d3.line().curve(d3.curveLinear);
+        }
+        const dualEdgeCurve = canvas
+          .insert("path", ":first-child")
+          .attr("d", curve(pointsForCurvePath))
+          .attr("class", "dual-edge")
+          .attr("stroke", dualEdgeStrokeColor)
+          .attr("stroke-width", dualEdgeStrokeWidth)
+          .attr("fill", "none");
+      }
+
+      function calculatePolygonOrientation(points) {
+        let n = points.length;
+        let area = 0;
+        for (let i = 0; i < n; i++) {
+          let j = (i + 1) % n;
+          area += points[i][0] * points[j][1] - points[j][0] * points[i][1];
+        }
+        if (area > 0) {
+          return "counterclockwise";
+        } else if (area < 0) {
+          return "clockwise";
+        } else {
+          return "none";
+        }
+      }
+
+      function isOnRightSide(p1, p2, p3) {
+        return (
+          (p2[0] - p1[0]) * (p3[1] - p1[1]) -
+            (p2[1] - p1[1]) * (p3[0] - p1[0]) <
+          0
+        );
+      }
+
+      function isOnLeftSide(p1, p2, p3) {
+        return (
+          (p2[0] - p1[0]) * (p3[1] - p1[1]) -
+            (p2[1] - p1[1]) * (p3[0] - p1[0]) >
+          0
+        );
+      }
+
+      function deleteBadPoints(points, polygonOrientation) {
+        let i = 0;
+        while (i < points.length - 2) {
+          if (polygonOrientation === "clockwise") {
+            if (!isOnRightSide(points[i], points[i + 1], points[i + 2])) {
+              points.splice(i + 1, 1);
+              if (i > 0) {
+                i--;
+              }
+            } else {
+              i++;
+            }
+          } else if (polygonOrientation === "counterclockwise") {
+            if (!isOnLeftSide(points[i], points[i + 1], points[i + 2])) {
+              points.splice(i + 1, 1);
+              if (i > 0) {
+                i--;
+              }
+            } else {
+              i++;
+            }
+          }
+        }
+        return points;
+      }
+
+      function findEdgesForControlPoints(firstEdge, targetEdge, face) {
+        let returnEdges = [];
+        let isForward = true;
+        let firstEdgeIndexInFace = 0;
+        for (let i = 0; i < face.length; i++) {
+          if (
+            (face[i][0] === firstEdge[0] && face[i][1] === firstEdge[1]) ||
+            (face[i][0] === firstEdge[1] && face[i][1] === firstEdge[0])
+          ) {
+            firstEdgeIndexInFace = i;
+            break;
+          }
+        }
+        let targetEdgeIndexInFace = 0;
+        for (let i = 0; i < face.length; i++) {
+          if (
+            (face[i][0] === targetEdge[0] && face[i][1] === targetEdge[1]) ||
+            (face[i][0] === targetEdge[1] && face[i][1] === targetEdge[0])
+          ) {
+            targetEdgeIndexInFace = i;
+            break;
+          }
+        }
+        if (firstEdgeIndexInFace === targetEdgeIndexInFace) {
+          return [[flipEdgeIndex(firstEdge)], isForward];
+        }
+        let secondEdgeIndexInFace = firstEdgeIndexInFace;
+        if (firstEdgeIndexInFace < targetEdgeIndexInFace) {
+          if (targetEdgeIndexInFace - firstEdgeIndexInFace > face.length / 2) {
+            isForward = false;
+          }
+        } else {
+          if (firstEdgeIndexInFace - targetEdgeIndexInFace <= face.length / 2) {
+            isForward = false;
+          }
+        }
+        if (isForward === true) {
+          let currentIndex = firstEdgeIndexInFace;
+          do {
+            returnEdges.push(face[currentIndex]);
+            currentIndex = (currentIndex + 1) % face.length;
+          } while (currentIndex !== targetEdgeIndexInFace);
+          returnEdges.push(face[targetEdgeIndexInFace]);
+        } else {
+          let currentIndex = firstEdgeIndexInFace;
+          do {
+            returnEdges.push(flipEdgeIndex(face[currentIndex]));
+            currentIndex = (currentIndex - 1 + face.length) % face.length;
+          } while (currentIndex !== targetEdgeIndexInFace);
+          returnEdges.push(flipEdgeIndex(face[targetEdgeIndexInFace]));
+        }
+        return [returnEdges, isForward];
+      }
+
+      function findABCFromTwoEdgeIndicesAndCurrentFace(
+        firstEdge,
+        secondEdge,
+        face
+      ) {
+        let firstEdgeIndexInFace = 0;
+        for (let i = 0; i < face.length; i++) {
+          if (
+            (face[i][0] === firstEdge[0] && face[i][1] === firstEdge[1]) ||
+            (face[i][0] === firstEdge[1] && face[i][1] === firstEdge[0])
+          ) {
+            firstEdgeIndexInFace = i;
+            break;
+          }
+        }
+        let secondEdgeIndexInFace = 0;
+        for (let i = 0; i < face.length; i++) {
+          if (
+            (face[i][0] === secondEdge[0] && face[i][1] === secondEdge[1]) ||
+            (face[i][0] === secondEdge[1] && face[i][1] === secondEdge[0])
+          ) {
+            secondEdgeIndexInFace = i;
+            break;
+          }
+        }
+        if (
+          firstEdgeIndexInFace + 1 === secondEdgeIndexInFace ||
+          secondEdgeIndexInFace === 0
+        ) {
+          if (firstEdge[0] === secondEdge[0]) {
+            return [firstEdge[1], firstEdge[0], secondEdge[1]];
+          } else if (firstEdge[0] === secondEdge[1]) {
+            return [firstEdge[1], firstEdge[0], secondEdge[0]];
+          } else if (firstEdge[1] === secondEdge[0]) {
+            return [firstEdge[0], firstEdge[1], secondEdge[1]];
+          } else if (firstEdge[1] === secondEdge[1]) {
+            return [firstEdge[0], firstEdge[1], secondEdge[0]];
+          }
+        } else {
+          if (firstEdge[0] === secondEdge[0]) {
+            return [secondEdge[1], firstEdge[0], firstEdge[1]];
+          } else if (firstEdge[0] === secondEdge[1]) {
+            return [secondEdge[0], firstEdge[0], firstEdge[1]];
+          } else if (firstEdge[1] === secondEdge[0]) {
+            return [secondEdge[1], firstEdge[1], firstEdge[0]];
+          } else if (firstEdge[1] === secondEdge[1]) {
+            return [secondEdge[0], firstEdge[1], firstEdge[0]];
+          }
+        }
+        return [];
+      }
+
+      function calculateControlPointFromPointToEdge(
+        startPoint,
+        edgeIndex,
+        face,
+        edgeSegments,
+        vertexCoordinates,
+        edgeIndexArray,
+        doRecursion = false
+      ) {
+        let controlPointsArray = [];
+        const edge = edgeIndexArray[edgeIndex];
+        const edgeMidPoint = calculateEdgeMidPoint(edge, vertexCoordinates);
+        const segmentFromPointToEdgeMidPoint = [startPoint, edgeMidPoint];
+
+        let [fis, fisIndex] = findFirstIntersectingSegmentAndIndex(
+          segmentFromPointToEdgeMidPoint,
+          edgeSegments
+        );
+        if (fisIndex === -1) {
+          return controlPointsArray;
+        }
+        const firstEdge = edgeIndexArray[fisIndex];
+        if (fisIndex === edgeIndex) {
+          return controlPointsArray;
+        }
+        const [edgesForControlPoints, isForward] = findEdgesForControlPoints(
+          firstEdge,
+          edge,
+          face
+        );
+        for (let i = 0; i < edgesForControlPoints.length - 1; i++) {
+          const a = edgesForControlPoints[i][0];
+          const b = edgesForControlPoints[i][1];
+          const c = edgesForControlPoints[i + 1][1];
+          let aCor = vertexCoordinates[a];
+          let bCor = vertexCoordinates[b];
+          let cCor = vertexCoordinates[c];
+          const ab = Math.sqrt(
+            (aCor[0] - bCor[0]) ** 2 + (aCor[1] - bCor[1]) ** 2
+          );
+          const bc = Math.sqrt(
+            (bCor[0] - cCor[0]) ** 2 + (bCor[1] - cCor[1]) ** 2
+          );
+          const factor = 1 + Math.log(edgesForControlPoints.length);
+          let distance = -40;
+          if (!isForward) {
+            distance = 40;
+          }
+          const controlPoint = findControlPoint(aCor, bCor, cCor, distance);
+          controlPointsArray.push(controlPoint);
+        }
+
+        let forwardArr = [];
+        let backwardArr = [];
+        let tempArr = [];
+        for (let i = 0; i < controlPointsArray.length; i++) {
+          const inputSegment = [startPoint, controlPointsArray[i]];
+          const numberOfIntersections = countIntersectionsExceptStartPoint(
+            inputSegment,
+            edgeSegments,
+            startPoint
+          );
+          forwardArr.push(numberOfIntersections);
+          tempArr.push(i + 1);
+        }
+        for (let i = 0; i < controlPointsArray.length; i++) {
+          const inputSegment = [edgeMidPoint, controlPointsArray[i]];
+          const numberOfIntersections = countIntersectionsExceptStartPoint(
+            inputSegment,
+            edgeSegments,
+            edgeMidPoint
+          );
+          backwardArr.push(numberOfIntersections);
+        }
+
+        for (let i = 0; i < controlPointsArray.length; i++) {
+          if (forwardArr[i] === 0 && backwardArr[i] === 0) {
+            return [controlPointsArray[i]];
+          }
+        }
+
+        let maxIndexOfZeroInForward = -1;
+        let minIndexOfZeroInBackward = -1;
+        for (let i = controlPointsArray.length - 1; i >= 0; i--) {
+          if (forwardArr[i] === 0) {
+            maxIndexOfZeroInForward = i;
+            break;
+          }
+        }
+        for (let i = 0; i < controlPointsArray.length; i++) {
+          if (backwardArr[i] === 0) {
+            minIndexOfZeroInBackward = i;
+            break;
+          }
+        }
+        if (
+          maxIndexOfZeroInForward !== -1 &&
+          minIndexOfZeroInBackward !== -1 &&
+          maxIndexOfZeroInForward < minIndexOfZeroInBackward
+        ) {
+          const pointA = controlPointsArray[maxIndexOfZeroInForward];
+          const pointB = controlPointsArray[minIndexOfZeroInBackward];
+          const targetSegment = [pointA, pointB];
+          let [fis, fisIndex] = findFirstIntersectingSegmentAndIndex(
+            targetSegment,
+            edgeSegments
+          );
+          if (fisIndex === -1) {
+            tempArr.splice(
+              maxIndexOfZeroInForward + 1,
+              minIndexOfZeroInBackward - maxIndexOfZeroInForward - 1
+            );
+            controlPointsArray.splice(
+              maxIndexOfZeroInForward + 1,
+              minIndexOfZeroInBackward - maxIndexOfZeroInForward - 1
+            );
+          }
+        }
+
+        if (maxIndexOfZeroInForward !== -1) {
+          controlPointsArray.splice(0, maxIndexOfZeroInForward);
+          tempArr.splice(0, maxIndexOfZeroInForward);
+        }
+        if (minIndexOfZeroInBackward !== -1) {
+          controlPointsArray.splice(
+            minIndexOfZeroInBackward + 1 - maxIndexOfZeroInForward
+          );
+          tempArr.splice(
+            minIndexOfZeroInBackward + 1 - maxIndexOfZeroInForward
+          );
+        }
+
+        return controlPointsArray;
+      }
+
+      function countIntersectionsExceptStartPoint(
+        targetSegment,
+        otherSegments,
+        startPoint
+      ) {
+        let numberOfIntersection = 0;
+
+        for (let i = 0; i < otherSegments.length; i++) {
+          const segment = otherSegments[i];
+          const point = getIntersection(targetSegment, segment);
+          if (point !== null) {
+            if (point[0] === startPoint[0] && point[1] === startPoint[1]) {
+              continue;
+            }
+            numberOfIntersection++;
+          }
+        }
+
+        return numberOfIntersection;
+      }
+
+      function findFirstIntersectingSegmentAndIndex(
+        targetSegment,
+        otherSegments
+      ) {
+        let intersection = null;
+        let firstSegment = null;
+        let firstSegmentIndex = -1;
+
+        for (let i = 0; i < otherSegments.length; i++) {
+          const segment = otherSegments[i];
+          const point = getIntersection(targetSegment, segment);
+          if (point !== null) {
+            if (
+              intersection === null ||
+              distance(targetSegment[0], point) <
+                distance(targetSegment[0], intersection)
+            ) {
+              intersection = point;
+              firstSegment = segment;
+              firstSegmentIndex = i;
+            }
+          }
+        }
+
+        return [firstSegment, firstSegmentIndex];
+      }
+
+      function getIntersection(segment1, segment2) {
+        // get the endpoints of the first segment
+        const [x1, y1] = segment1[0];
+        const [x2, y2] = segment1[1];
+
+        // get the endpoints of the second segment
+        const [x3, y3] = segment2[0];
+        const [x4, y4] = segment2[1];
+
+        // calculate the denominator of the intersection formula
+        const denominator = (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1);
+
+        // if the denominator is zero, the segments are parallel or coincident
+        if (denominator === 0) {
+          return null;
+        }
+
+        // calculate the numerator of the intersection formula for segment 1
+        const numerator1 = (x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3);
+
+        // calculate the numerator of the intersection formula for segment 2
+        const numerator2 = (x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3);
+
+        // calculate the parameters of the intersection point along each segment
+        const parameter1 = numerator1 / denominator;
+        const parameter2 = numerator2 / denominator;
+
+        // if the intersection point is outside of either segment, return null
+        if (
+          parameter1 < 0 ||
+          parameter1 > 1 ||
+          parameter2 < 0 ||
+          parameter2 > 1
+        ) {
+          return null;
+        }
+
+        // calculate the intersection point and return it
+        const intersectionX = x1 + parameter1 * (x2 - x1);
+        const intersectionY = y1 + parameter1 * (y2 - y1);
+        return [intersectionX, intersectionY];
+      }
+
+      function distance(point1, point2) {
+        const dx = point2[0] - point1[0];
+        const dy = point2[1] - point1[1];
+        return Math.sqrt(dx * dx + dy * dy);
+      }
+
+      function updateVertexRadius(svg, radius) {
+        let circles = svg.querySelectorAll("circle.vertex");
+        for (let i = 0; i < circles.length; i++) {
+          circles[i].setAttribute("r", radius);
+        }
+      }
+
+      function updateDualVertexRadius(svg, radius) {
+        let circles = svg.querySelectorAll("circle.dual-vertex");
+        for (let i = 0; i < circles.length; i++) {
+          circles[i].setAttribute("r", radius);
+        }
+      }
+
+      function updateVertexStrokeWidth(svg, width) {
+        let circles = svg.querySelectorAll("circle.vertex");
+        for (let i = 0; i < circles.length; i++) {
+          circles[i].setAttribute("stroke-width", width);
+        }
+      }
+
+      function updateEdgeStrokeWidth(svg, width) {
+        let lines = svg.querySelectorAll("line");
+        for (let i = 0; i < lines.length; i++) {
+          lines[i].setAttribute("stroke-width", width);
+        }
+      }
+
+      function updateDualEdgeStrokeWidth(svg, width) {
+        let paths = svg.querySelectorAll("path.dual-edge");
+        for (let i = 0; i < paths.length; i++) {
+          paths[i].setAttribute("stroke-width", width);
+        }
+      }
+
+      function updateVertexFillColor(svg, color) {
+        let circles = svg.querySelectorAll("circle.vertex");
+        for (let i = 0; i < circles.length; i++) {
+          circles[i].setAttribute("fill", color);
+        }
+      }
+
+      function updateVertexStrokeColor(svg, color) {
+        let circles = svg.querySelectorAll("circle.vertex");
+        for (let i = 0; i < circles.length; i++) {
+          circles[i].setAttribute("stroke", color);
+        }
+      }
+
+      function updateEdgeStrokeColor(svg, color) {
+        let lines = svg.querySelectorAll("line");
+        for (let i = 0; i < lines.length; i++) {
+          lines[i].setAttribute("stroke", color);
+        }
+      }
+
+      function updateDualEdgeStrokeColor(svg, color) {
+        let paths = svg.querySelectorAll("path.dual-edge");
+        for (let i = 0; i < paths.length; i++) {
+          paths[i].setAttribute("stroke", color);
+        }
+      }
+
+      function updateDualVertexFillColor(svg, color) {
+        let dualVertices = svg.querySelectorAll("circle.dual-vertex");
+        for (let i = 0; i < dualVertices.length; i++) {
+          dualVertices[i].setAttribute("fill", color);
+        }
+      }
+
+      function updateDualVertexStrokeWidth(svg, width) {
+        let circles = svg.querySelectorAll("circle.dual-vertex");
+        for (let i = 0; i < circles.length; i++) {
+          circles[i].setAttribute("stroke-width", width);
+        }
+      }
+
+      function updateDualVertexStrokeColor(svg, color) {
+        let dualVertices = svg.querySelectorAll("circle.dual-vertex");
+        for (let i = 0; i < dualVertices.length; i++) {
+          dualVertices[i].setAttribute("stroke", color);
+        }
+      }
+    </script>
+  </body>
+</html>
